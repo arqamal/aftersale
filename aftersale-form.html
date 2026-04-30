@@ -397,6 +397,8 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('sendingOverlay').classList.remove('active');
       document.getElementById('aftersaleForm').style.display = 'none';
       document.getElementById('successScreen').style.display = 'block';
+      scrollToTop();
+      sendHeight();
 
     } catch (err) {
       document.getElementById('sendingOverlay').classList.remove('active');
@@ -471,6 +473,17 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
 
+
+  // ── IFRAME HEIGHT COMMUNICATION ──────────────────────────
+  function sendHeight() {
+    const height = document.body.scrollHeight;
+    window.parent.postMessage({ iframeHeight: height }, '*');
+  }
+  function scrollToTop() {
+    window.parent.postMessage({ scrollTop: true }, '*');
+  }
+  sendHeight();
+  new ResizeObserver(sendHeight).observe(document.body);
 
 }); // DOMContentLoaded
 </script>
