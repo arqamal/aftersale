@@ -384,15 +384,26 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('btnSubmit').disabled = true;
 
     try {
-      const payload = await buildPayload();
+      const base = await buildBaseData();
 
-      const res = await fetch(MAKE_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      for (const issue of base.issues) {
+        const payload = {
+          email:      base.email,
+          promotion:  base.promotion,
+          house:      base.house,
+          date:       base.date,
+          next_visit: base.next_visit,
+          issue:      issue
+        };
 
-      if (!res.ok) throw new Error('HTTP ' + res.status);
+        const res = await fetch(MAKE_WEBHOOK, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+      }
 
       document.getElementById('sendingOverlay').classList.remove('active');
       document.getElementById('aftersaleForm').style.display = 'none';
@@ -439,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  async function buildPayload() {
+  async function buildBaseData() {
     const f = id => document.getElementById(id).value;
     const email    = f('email');
     const promotion = f('urbanizacion');
