@@ -394,9 +394,8 @@ document.addEventListener('DOMContentLoaded', function() {
   addModule();
 
   // ── CONFIG ──────────────────────────────────────────────
-  const MAKE_WEBHOOK       = 'https://hook.eu1.make.com/2jtvw4boc8wvqpexy83rews49omc7eco';
-  const MAKE_EMAIL_WEBHOOK = 'https://hook.eu1.make.com/gxe78irk0q4x9k74nzzrwyaa5uxcqe32';
-  const CF_WORKER          = 'https://trello-image-uploader.arquitectura-90b.workers.dev';
+  const MAKE_WEBHOOK = 'https://hook.eu1.make.com/2jtvw4boc8wvqpexy83rews49omc7eco';
+  const CF_WORKER    = 'https://trello-image-uploader.arquitectura-90b.workers.dev';
   // ────────────────────────────────────────────────────────
 
   document.getElementById('aftersaleForm').addEventListener('submit', async function(e) {
@@ -448,24 +447,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         await new Promise(r => setTimeout(r, 500));
       }
-
-      // Send confirmation email with all issues summary
-      const emailPayload = {
-        email:      base.email,
-        promotion:  base.promotion,
-        house:      base.house,
-        date:       base.date,
-        next_visit: base.next_visit,
-        issues:     base.issues.map(i => ({
-          location:    LOCATION_ES[i.location] || i.location,
-          description: i.description
-        }))
-      };
-      await fetch(MAKE_EMAIL_WEBHOOK, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(emailPayload)
-      });
 
       document.getElementById('sendingOverlay').classList.remove('active');
       document.getElementById('aftersaleForm').style.display = 'none';
