@@ -450,6 +450,10 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       // Send confirmation email with all issues summary
+      const issuesHtml = base.issues.map(i =>
+        `<tr><td>${LOCATION_ES[i.location] || i.location}</td><td>${i.description}</td></tr>`
+      ).join('');
+
       fetch(MAKE_EMAIL_WEBHOOK, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -458,11 +462,8 @@ document.addEventListener('DOMContentLoaded', function() {
           promotion:  base.promotion,
           house:      base.house,
           date:       base.date,
-          next_visit: base.next_visit,
-          issues:     base.issues.map(i => ({
-            location:    LOCATION_ES[i.location] || i.location,
-            description: i.description
-          }))
+          next_visit: base.next_visit || '',
+          issues_html: issuesHtml
         })
       }).catch(err => console.warn('Email webhook error:', err));
 
