@@ -257,17 +257,37 @@
 document.addEventListener('DOMContentLoaded', function() {
   const LOCALIZACIONES = [
     'Entrance',
-    'Kitchen & Living Room',
-    'Bedroom 1 & Bathroom',
+    'Kitchen',
+    'Living Room',
+    'Bedroom 1',
+    'Bathroom',
     'Bedroom 2',
     'Bedroom 3',
     'Bathroom 2',
-    'Stairs & Solarium Access',
+    'Stairs',
+    'Solarium Access',
     'Solarium',
     'Rooftop',
     'Exterior',
     'General Installations'
   ];
+
+  const LOCATION_ES = {
+    'Entrance':             'Entrada',
+    'Kitchen':              'Cocina',
+    'Living Room':          'Salón',
+    'Bedroom 1':            'Dormitorio 1',
+    'Bathroom':             'Baño 1',
+    'Bedroom 2':            'Dormitorio 2',
+    'Bedroom 3':            'Dormitorio 3',
+    'Bathroom 2':           'Baño 2',
+    'Stairs':               'Escaleras',
+    'Solarium Access':      'Subida a Solarium',
+    'Solarium':             'Solarium',
+    'Rooftop':              'Cubierta',
+    'Exterior':             'Exterior',
+    'General Installations':'Instalaciones Generales'
+  };
 
   function addModule() {
     moduleCount++;
@@ -373,8 +393,10 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('btnAddModule').addEventListener('click', addModule);
   addModule();
 
-  // ── SUBMIT ──────────────────────────────────────────────
+  // ── CONFIG ──────────────────────────────────────────────
   const MAKE_WEBHOOK = 'https://hook.eu1.make.com/2jtvw4boc8wvqpexy83rews49omc7eco';
+  const CF_WORKER    = 'https://trello-image-uploader.arquitectura-90b.workers.dev';
+  // ────────────────────────────────────────────────────────
 
   document.getElementById('aftersaleForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -383,28 +405,46 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('sendingOverlay').classList.add('active');
     document.getElementById('btnSubmit').disabled = true;
 
+  // ── SUBMIT ──────────────────────────────────────────────
     try {
       const base = await buildBaseData();
 
       for (const issue of base.issues) {
+        // 1. Send issue data (without images) to Make
         const payload = {
           email:      base.email,
           promotion:  base.promotion,
           house:      base.house,
           date:       base.date,
           next_visit: base.next_visit,
-          issue:      issue
+          issue: {
+            location:    LOCATION_ES[issue.location] || issue.location,
+            description: issue.description
+          }
         };
 
-        const res = await fetch(MAKE_WEBHOOK, {
+        const makeRes = await fetch(MAKE_WEBHOOK, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        if (!makeRes.ok) throw new Error('Make error: ' + makeRes.status);
 
-        // Small delay between calls to avoid overwhelming the webhook
+        // 2. Get cardId from Make response
+        const makeData = await makeRes.json();
+        const cardId = makeData.cardId;
+
+        // 3. If there are images and we have a cardId, upload via Cloudflare Worker
+        if (cardId && issue.images && issue.images.length > 0) {
+          const workerRes = await fetch(CF_WORKER, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cardId, images: issue.images })
+          });
+          if (!workerRes.ok) console.warn('Worker error:', workerRes.status);
+        }
+
         await new Promise(r => setTimeout(r, 500));
       }
 
