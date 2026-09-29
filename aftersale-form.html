@@ -568,6 +568,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   sendHeight();
   new ResizeObserver(sendHeight).observe(document.body);
+  (function() {
+    var _c = 0;
+    var _t = setInterval(function() {
+      sendHeight();
+      _c++;
+      if (_c >= 20) clearInterval(_t);
+    }, 400);
+  })();
 
 }); // DOMContentLoaded
 </script>
